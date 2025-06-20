@@ -1,0 +1,1165 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        200,
+        700
+      ],
+      "id": "5925a49f-8b2b-4af5-8211-450725dbb1dd",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ta7hGtFwJU411InN",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"unique_title\":\"\",\n  \"scenes\": [\n    {\n      \"id\":\"1\",\n      \"transcript\": \"First line of the video\",\n      \"image_prompt\": \"Detailed and consistent image prompt\"\n    },\n    {\n      \"id\":\"2\",\n      \"transcript\": \"Second line of the video\",\n      \"image_prompt\": \"Next image description\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        700
+      ],
+      "id": "fab63e95-381f-4026-a534-f1f14e3a717a",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.scenes",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        560,
+        480
+      ],
+      "id": "5fe04f4c-c4dd-4262-8ace-1d3471c92dd7",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        780,
+        480
+      ],
+      "id": "5cfcf54a-bd10-4e3f-a3fd-61eb15d84f73",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/v1/video/caption",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"video_url\": \"{{ $json.response }}\",\n  \"settings\": {\n    \"line_color\": \"#FFFFFF\",\n    \"word_color\": \"#FFFF00\",\n    \"all_caps\": false,\n    \"max_words_per_line\": 3,\n    \"font_size\": 60,\n    \"bold\": false,\n    \"italic\": false,\n    \"underline\": false,\n    \"strikeout\": false,\n    \"outline_width\": 3,\n    \"shadow_offset\": 4,\n    \"style\": \"highlight\",\n    \"font_family\": \"The Bold Font\",\n    \"position\": \"bottom_center\"\n  },\n  \"id\": \"gdrive-five\"\n}",
+        "options": {
+          "timeout": 100000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        20
+      ],
+      "id": "8c714db7-a204-450a-b289-7e2c64ebe82c",
+      "name": "Caption Video",
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YNlsM6NR9kv5qfK5",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('Video Request').first().json.music_url }}.mp3\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        20
+      ],
+      "id": "23bfe5f6-e240-46a9-af79-76d72e366c14",
+      "name": "Load Music",
+      "alwaysOutputData": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "command": "=yt-dlp -x --audio-format mp3 -o \"/home/node/.n8n/{{ $('Video Request').first().json.music_url }}.mp3\" \"https://www.youtube.com/watch?v={{ $('Video Request').first().json.music_url }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        20
+      ],
+      "id": "7c9df585-a0f2-4ea4-aa45-e9f079ea58ff",
+      "name": "Download Youtube Music"
+    },
+    {
+      "parameters": {
+        "formTitle": "Video Generator",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Idea",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Style",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Tone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Voice",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "af_alloy"
+                  },
+                  {
+                    "option": "af_aoede"
+                  },
+                  {
+                    "option": "af_bella"
+                  },
+                  {
+                    "option": "af_heart"
+                  },
+                  {
+                    "option": "af_jadzia"
+                  },
+                  {
+                    "option": "af_jessica"
+                  },
+                  {
+                    "option": "af_kore"
+                  },
+                  {
+                    "option": "af_nicole"
+                  },
+                  {
+                    "option": "af_nova"
+                  },
+                  {
+                    "option": "af_river"
+                  },
+                  {
+                    "option": "af_sarah"
+                  },
+                  {
+                    "option": "af_sky"
+                  },
+                  {
+                    "option": "af_v0"
+                  },
+                  {
+                    "option": "af_v0bella"
+                  },
+                  {
+                    "option": "af_v0irulan"
+                  },
+                  {
+                    "option": "af_v0nicole"
+                  },
+                  {
+                    "option": "af_v0sarah"
+                  },
+                  {
+                    "option": "af_v0sky"
+                  },
+                  {
+                    "option": "am_adam"
+                  },
+                  {
+                    "option": "am_echo"
+                  },
+                  {
+                    "option": "am_eric"
+                  },
+                  {
+                    "option": "am_fenrir"
+                  },
+                  {
+                    "option": "am_liam"
+                  },
+                  {
+                    "option": "am_michael"
+                  },
+                  {
+                    "option": "am_onyx"
+                  },
+                  {
+                    "option": "am_puck"
+                  },
+                  {
+                    "option": "am_santa"
+                  },
+                  {
+                    "option": "am_v0adam"
+                  },
+                  {
+                    "option": "am_v0gurney"
+                  },
+                  {
+                    "option": "am_v0michael"
+                  },
+                  {
+                    "option": "bf_alice"
+                  },
+                  {
+                    "option": "bf_emma"
+                  },
+                  {
+                    "option": "bf_lily"
+                  },
+                  {
+                    "option": "bf_v0emma"
+                  },
+                  {
+                    "option": "bf_v0isabella"
+                  },
+                  {
+                    "option": "bm_daniel"
+                  },
+                  {
+                    "option": "bm_fable"
+                  },
+                  {
+                    "option": "bm_george"
+                  },
+                  {
+                    "option": "bm_lewis"
+                  },
+                  {
+                    "option": "bm_v0george"
+                  },
+                  {
+                    "option": "bm_v0lewis"
+                  },
+                  {
+                    "option": "ef_dora"
+                  },
+                  {
+                    "option": "em_alex"
+                  },
+                  {
+                    "option": "em_santa"
+                  },
+                  {
+                    "option": "ff_siwis"
+                  },
+                  {
+                    "option": "hf_alpha"
+                  },
+                  {
+                    "option": "hf_beta"
+                  },
+                  {
+                    "option": "hm_omega"
+                  },
+                  {
+                    "option": "hm_psi"
+                  },
+                  {
+                    "option": "if_sara"
+                  },
+                  {
+                    "option": "im_nicola"
+                  },
+                  {
+                    "option": "jf_alpha"
+                  },
+                  {
+                    "option": "jf_gongitsune"
+                  },
+                  {
+                    "option": "jf_nezumi"
+                  },
+                  {
+                    "option": "jf_tebukuro"
+                  },
+                  {
+                    "option": "jm_kumo"
+                  },
+                  {
+                    "option": "pf_dora"
+                  },
+                  {
+                    "option": "pm_alex"
+                  },
+                  {
+                    "option": "pm_santa"
+                  },
+                  {
+                    "option": "zf_xiaobei"
+                  },
+                  {
+                    "option": "zf_xiaoni"
+                  },
+                  {
+                    "option": "zf_xiaoxiao"
+                  },
+                  {
+                    "option": "zf_xiaoyi"
+                  },
+                  {
+                    "option": "zm_yunjian"
+                  },
+                  {
+                    "option": "zm_yunxi"
+                  },
+                  {
+                    "option": "zm_yunxia"
+                  },
+                  {
+                    "option": "zm_yunyang"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Type",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Long Form"
+                  },
+                  {
+                    "option": "Short Form"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "music_url",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -260,
+        480
+      ],
+      "id": "c07b7c6b-1421-4009-a83b-0502779aa531",
+      "name": "Video Request",
+      "webhookId": "a4247ef7-51f0-4821-b3c4-5424303df9b1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// grab your input type\nconst inputType = $input.first().json.Type;\n\n// base dims for each format\nconst base = {\n  'Long Form':  { width: 1920, height: 1080 },\n  'Short Form': { width: 1080, height: 1920 }\n}[inputType] || { width: 1280, height: 720 };\n\n// unpack\nlet { width, height } = base;\n\n// clamp height into [64,1792]\nconst MIN_H = 64, MAX_H = 1792;\nif (height < MIN_H || height > MAX_H) {\n  // keep aspect ratio\n  const ratio = width / height;\n  const clampedH = Math.min(Math.max(height, MIN_H), MAX_H);\n  height = clampedH;\n  width  = Math.round(ratio * height);\n}\n\nreturn [\n  {\n    json: {\n      inputType,\n      width,\n      height,\n      quality: 'best'  // flag for highest-quality downstream processing\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        480
+      ],
+      "id": "827b3123-000c-4af5-aa7d-df850a03e546",
+      "name": "Determine Resolution"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Idea: {{ $('Video Request').item.json.Idea }}\nStyle: {{ $('Video Request').item.json.Style }}\nTone: {{ $('Video Request').item.json.Tone }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a creative assistant that turns user-provided ideas into structured, consistent, timed video scripts with visual guidance.\n\nStep-by-step, follow these rules:\n\n\n\nTake the user's idea and develop a short video script (3–5 minutes).\n\nDivide the script into clearly timed segments (each 5–15 seconds), in this format:\n\n00:00 - 00:10: [Line of transcript]\n\nFor each line of transcript, generate a descriptive image prompt consistent in style, tone, characters, and world.\n\nUse the same visual style across all image prompts (e.g., watercolor, cinematic, pixel art), and make it match the tone of the script.\n\nMaintain narrative and visual consistency (same characters, clothing, environment unless intentionally evolving).\n\nAsk the user for:\n\nIdea or theme\n\nPreferred visual style (optional)\n\nTone (e.g., inspirational, dark, educational)\n\nOutput must be formatted strictly following this schema (do not include the word json in your response directly the object):\n\n{\n\"unique_title\":\"\", //without special characters and nospaces\n  \"scenes\": [\n    {\n      \"id\":\"1\",\n      \"transcript\": \"First line of the video\",\n      \"image_prompt\": \"Detailed and consistent image prompt\" //make sure the images do not contain text\n    },\n    {\n      \"id\":\"2\",\n      \"transcript\": \"Second line of the video\",\n      \"image_prompt\": \"Next image description\"\n    }\n  ]\n}\n"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        180,
+        480
+      ],
+      "id": "d85829d2-dac3-40f1-8bef-aa2674eabec4",
+      "name": "Generate Video Script"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1000,
+        480
+      ],
+      "id": "3bb75a00-1cbf-4a27-b7e1-d3f186b52c4f",
+      "name": "Wait (Rate Limit)",
+      "webhookId": "7f6921d5-65d8-4b5e-a7db-30debe86863a"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        480
+      ],
+      "id": "4e4387c2-f14a-4cf0-a93f-d4ee5d26c51d",
+      "name": "Convert To Binary",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "nca-toolkit",
+        "fileName": "={{ $('Loop Over Items').item.json.output.unique_title }}{{ $('Loop Over Items').item.json['output.scenes'].id }}.jpg",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        480
+      ],
+      "id": "49bcfcfc-537d-4177-84f2-439511d80667",
+      "name": "Upload Image",
+      "notesInFlow": true,
+      "credentials": {
+        "s3": {
+          "id": "Kqb7P12a8cueOENn",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:880/v1/audio/speech",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"kokoro\",\n  \"input\": {{ $('Split Out').item.json['output.scenes'].transcript.toJsonString() }},\n  \"voice\": \"{{ $('Video Request').item.json.Voice }}\",\n  \"response_format\": \"mp3\",\n  \"speed\": 1\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1880,
+        480
+      ],
+      "id": "0b340aff-a9e5-4683-9c11-a8c0aef0a519",
+      "name": "Generate Voice Over",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "nca-toolkit",
+        "fileName": "={{ $('Loop Over Items').item.json.output.unique_title }}{{ $('Loop Over Items').item.json['output.scenes'].id }}.mp3",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        2100,
+        480
+      ],
+      "id": "8b178e7c-f0d0-4509-a063-feca4a731e6b",
+      "name": "Upload Voice Over",
+      "notesInFlow": true,
+      "credentials": {
+        "s3": {
+          "id": "Kqb7P12a8cueOENn",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.7:8080/v1/media/metadata",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "media_url",
+              "value": "=http://host.docker.internal:9000/nca-toolkit/{{ $('Wait (Rate Limit)').item.json.output.unique_title }}{{ $('Wait (Rate Limit)').item.json['output.scenes'].id }}.mp3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2320,
+        480
+      ],
+      "id": "c1d902e6-d402-47db-8817-57b72fbcddb3",
+      "name": "Get Audio Duration",
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YNlsM6NR9kv5qfK5",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/v1/image/convert/video",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"image_url\": \"http://host.docker.internal:9000/nca-toolkit/{{ $('Loop Over Items').item.json.output.unique_title }}{{ $('Loop Over Items').item.json['output.scenes'].id }}.jpg\",\n    \"length\": {{ $json.response.duration }},\n    \"frame_rate\": 24,\n    \"zoom_speed\": 2\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2540,
+        480
+      ],
+      "id": "d481a772-5225-4939-907c-9360c2c40da2",
+      "name": "Animate Image",
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YNlsM6NR9kv5qfK5",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=ffmpeg -y -i \"{{ $json.response }}\" -stream_loop -1 -i \"http://host.docker.internal:9000/nca-toolkit/{{ $('Loop Over Items').item.json.output.unique_title }}{{ $('Loop Over Items').item.json['output.scenes'].id }}.mp3\" -shortest \"{{ $('Loop Over Items').item.json.output.unique_title }}{{ $('Loop Over Items').item.json['output.scenes'].id }}.mp4\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2760,
+        480
+      ],
+      "id": "364036da-dadc-4fe9-8da9-28cf720298f8",
+      "name": "Add Voice Over To Video"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('Loop Over Items').item.json.output.unique_title }}{{ $('Loop Over Items').item.json['output.scenes'].id }}.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2980,
+        480
+      ],
+      "id": "d68213be-5d4b-4993-98a7-486fe650461e",
+      "name": "Load Video From Disk",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "nca-toolkit",
+        "fileName": "={{ $('Loop Over Items').item.json.output.unique_title }}{{ $('Loop Over Items').item.json['output.scenes'].id }}.mp4",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        3200,
+        540
+      ],
+      "id": "827e982a-1850-4fd2-9dea-39eac99a067d",
+      "name": "Upload Mixed Video",
+      "notesInFlow": true,
+      "credentials": {
+        "s3": {
+          "id": "Kqb7P12a8cueOENn",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const { unique_title, scenes } = $('Generate Video Script').first().json.output;\n\n// 2. Build the array of video objects\nconst arr = scenes.map(scene => ({\n  video_url: `http://host.docker.internal:9000/nca-toolkit/${unique_title}${scene.id}.mp4`\n}));\n\n// 3. Return one item whose .json wraps that array\nreturn [\n  {\n    json: {\n      videos: arr\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        20
+      ],
+      "id": "94cf330e-ca9f-485c-a388-95d7002d5e77",
+      "name": "Prepare Video Urls"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "51cef1ea-53e3-40fe-bf67-88218727b91b",
+              "name": "json",
+              "value": "={{ $json.videos }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1240,
+        20
+      ],
+      "id": "b0c2aa90-4322-4a9e-922e-5a13e1c0db16",
+      "name": "Map Video Urls",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/v1/video/concatenate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"video_urls\": {{ $json.json }}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1460,
+        20
+      ],
+      "id": "7ba3ed4b-7a51-416f-94fd-6b8e6efd6a41",
+      "name": "Concatenate Scenes",
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YNlsM6NR9kv5qfK5",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "nca-toolkit",
+        "fileName": "={{ $json.fileName }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        2340,
+        20
+      ],
+      "id": "65e7b801-1ce8-4209-b446-b2a90a3ea61e",
+      "name": "Upload Music",
+      "notesInFlow": true,
+      "credentials": {
+        "s3": {
+          "id": "Kqb7P12a8cueOENn",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=ffmpeg -y -i \"{{ $('Caption Video').first().json.response.replace(\"host.docker.internal\",\"localhost\") }}\" -stream_loop -1 -i {{ $('Load Music').item.json.fileName }} -filter_complex \"[1:a]volume=0.1,apad[a1];[0:a][a1]amerge=inputs=2[aout]\" -map 0:v -map \"[aout]\" -c:v copy -shortest {{ $('Generate Video Script').first().json.output.unique_title }}_final.mp4"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        20
+      ],
+      "id": "d8a5db54-f5a0-4372-a0cb-f42ba809a8db",
+      "name": "Add Background Music To Video"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('Generate Video Script').first().json.output.unique_title }}_final.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2780,
+        20
+      ],
+      "id": "9cfb223c-d6f3-402f-99d1-84cd3ab31ef8",
+      "name": "Load Final Video",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.together.xyz/v1/images/generations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"black-forest-labs/FLUX.1-schnell\",\n  \"prompt\": \"{{ $('Loop Over Items').item.json['output.scenes'].image_prompt }}\",\n  \"width\":{{ $('Determine Resolution').item.json.width }} ,\n  \"height\": {{ $('Determine Resolution').item.json.height }},\n  \"response_format\": \"base64_json\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        480
+      ],
+      "id": "377f57ec-f0b6-4e95-8e71-fb486f85a68d",
+      "name": "Generate Image",
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "oCxjzThQSpLMRuuN",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Generate Video Settings and Script",
+        "height": 480,
+        "width": 1160
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        360
+      ],
+      "id": "25aa1eda-88e1-4fb6-9952-2d2ad25498b5",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Create Scenes",
+        "height": 480,
+        "width": 2660,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        720,
+        360
+      ],
+      "id": "d6c160d3-88f7-41b0-a23e-53d5bdcf8bd5",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Mix Scenes and Provide Final Video",
+        "height": 480,
+        "width": 2140,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        900,
+        -160
+      ],
+      "id": "2be7302b-9491-433f-91b8-168b772e8ca9",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2020,
+        -140
+      ],
+      "id": "1821f46d-bb91-474d-8ea0-04bbde1829c0",
+      "name": "Wait",
+      "webhookId": "65837d59-738f-4d9f-bf88-cba228f8f41b"
+    }
+  ],
+  "pinData": {
+    "Video Request": [
+      {
+        "json": {
+          "Idea": "horror story of the monkey paw",
+          "Style": "pixelart",
+          "Tone": "horror story telling",
+          "Voice": "am_adam",
+          "Type": "Short Form",
+          "music_url": "ii-e259WZdY",
+          "submittedAt": "2025-06-08T12:58:48.768-04:00",
+          "formMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Video Script",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Video Script",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Prepare Video Urls",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait (Rate Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Music": {
+      "main": [
+        [
+          {
+            "node": "Upload Music",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Youtube Music": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Caption Video": {
+      "main": [
+        [
+          {
+            "node": "Download Youtube Music",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video Request": {
+      "main": [
+        [
+          {
+            "node": "Determine Resolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine Resolution": {
+      "main": [
+        [
+          {
+            "node": "Generate Video Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Video Script": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait (Rate Limit)": {
+      "main": [
+        [
+          {
+            "node": "Generate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert To Binary": {
+      "main": [
+        [
+          {
+            "node": "Upload Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Image": {
+      "main": [
+        [
+          {
+            "node": "Generate Voice Over",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Voice Over": {
+      "main": [
+        [
+          {
+            "node": "Upload Voice Over",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Voice Over": {
+      "main": [
+        [
+          {
+            "node": "Get Audio Duration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Audio Duration": {
+      "main": [
+        [
+          {
+            "node": "Animate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Animate Image": {
+      "main": [
+        [
+          {
+            "node": "Add Voice Over To Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Voice Over To Video": {
+      "main": [
+        [
+          {
+            "node": "Load Video From Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Video From Disk": {
+      "main": [
+        [
+          {
+            "node": "Upload Mixed Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Mixed Video": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Video Urls": {
+      "main": [
+        [
+          {
+            "node": "Map Video Urls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Video Urls": {
+      "main": [
+        [
+          {
+            "node": "Concatenate Scenes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Concatenate Scenes": {
+      "main": [
+        [
+          {
+            "node": "Caption Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Music": {
+      "main": [
+        [
+          {
+            "node": "Add Background Music To Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Background Music To Video": {
+      "main": [
+        [
+          {
+            "node": "Load Final Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image": {
+      "main": [
+        [
+          {
+            "node": "Convert To Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Load Music",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "01f6e8a0-1026-4f0d-8957-02270bcb0f01",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "acf0e6584342fdad62ede972b8bd85df36d3288bed3c4ce3608f4d36279b91c4"
+  },
+  "id": "kBdV9FIxoWvlcNNX",
+  "tags": []
+}
